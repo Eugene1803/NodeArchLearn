@@ -7,4 +7,4 @@
 **/uploads
 _nodemon.log
 nginx_caches/
-
+votesResults.json

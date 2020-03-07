@@ -1,0 +1,69 @@
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+    <body>
+        <div id='statistics'></div>
+        <div id='variants'></div>
+         <script>
+             const body = document.body;
+             const statTableContainer = document.getElementById('statistics');
+             const variantsContainer = document.getElementById('variants');
+             let currentVoteValue = false;
+
+            const setVote = val => {
+                currentVoteValue = val;
+            }
+
+            buildVariants = (variants) => {
+                let varinatsInnerHtml =`<h3>Ваш любимый цвет: </h3>`;
+                variants.forEach(variant => {
+                    varinatsInnerHtml += 
+                    `<input type="radio" 
+                    name="vote"
+                    onclick="setVote(${variant.value})" 
+                    value="${variant.value}"/> 
+                    ${variant.name}</br>`
+                });
+                varinatsInnerHtml += `<button onclick="sendVote()">Отправить</button>`;
+                variantsContainer.innerHTML = varinatsInnerHtml;
+            }
+
+             getVariants = async () => {
+                let response = await fetch('http://localhost:3000/variants')
+                buildVariants(await response.json());
+             }
+
+             const buildStatisticTable = stat => {
+                let statInnerHTML = '<h3>Cтатистика</h3>';
+                stat.forEach(item => {
+                    statInnerHTML += `Вариант: ${item.name} Голосов: ${item.votes} </br>`
+                })
+                statTableContainer.innerHTML = statInnerHTML;
+             }
+               
+             const getStatistics = async() => {
+                let response = await fetch('http://localhost:3000/stat')
+                buildStatisticTable(await response.json());
+             }
+
+             const sendVote = async() => {
+                 if(currentVoteValue === false) return;
+                 variantsContainer.innerHTML = 'Спасибо, ваш голос принят!';
+                 statTableContainer.innerHTML = 'Подождите, идет обработка статистики';
+                 await fetch('http://localhost:3000/vote', {
+                     method: 'POST',
+                     body: JSON.stringify({value:currentVoteValue}),
+                     headers: {
+                         'Content-type': 'application/json; charset=utf-8'
+                     }
+                 })
+                 getStatistics();
+             }
+             getStatistics();
+                getVariants();
+        </script>
+    </body>         
+ </html>
