@@ -1,0 +1,96 @@
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+
+    <body>
+        <div id='statistics'></div>
+        <div id='variants'></div>
+        <div>
+            <button id='JSON'>JSON</button>
+            <button id='HTML'>HTML</button>
+            <button id='XML'>XML</button>
+        </div>
+        <div>
+            <textarea style='width:500px; height: 300px' id='resultsTextarea'></textarea>
+        </div>
+         <script>
+             const body = document.body;
+             const statTableContainer = document.getElementById('statistics');
+             const variantsContainer = document.getElementById('variants');
+             const jsonButton = document.getElementById('JSON');
+             jsonButton.onclick = () => getFormattedStatistics('application/json');
+             const htmlButton = document.getElementById('HTML');
+             htmlButton.onclick = () => getFormattedStatistics('text/html');
+             const xmlButton = document.getElementById('XML');
+             xmlButton.onclick = () => getFormattedStatistics('application/xml');
+             const resultsTextarea = document.getElementById('resultsTextarea');
+
+             let currentVoteValue = false;
+
+            const setVote = val => {
+                currentVoteValue = val;
+            }
+
+            buildVariants = (variants) => {
+                let varinatsInnerHtml =`<h3>Ваш любимый цвет: </h3>`;
+                variants.forEach(variant => {
+                    varinatsInnerHtml += 
+                    `<input type="radio" 
+                    name="vote"
+                    onclick="setVote(${variant.value})" 
+                    value="${variant.value}"/> 
+                    ${variant.name}</br>`
+                });
+                varinatsInnerHtml += `<button onclick="sendVote()">Отправить</button>`;
+                variantsContainer.innerHTML = varinatsInnerHtml;
+            }
+
+             getVariants = async () => {
+                let response = await fetch('http://localhost:3010/variants')
+                buildVariants(await response.json());
+             }
+
+             getFormattedStatistics = async (accept) => {
+                let response = await fetch('http://localhost:3010/getFormattedStatistics', {
+                    method: 'get',
+                    headers: {
+                        Accept: accept,
+                    }
+                });
+                const data = (accept === 'application/json') ? await response.json() : await response.text();
+                resultsTextarea.innerHTML = (accept === 'application/json') ? JSON.stringify(data) :data;
+             }
+
+             const buildStatisticTable = stat => {
+                let statInnerHTML = '<h3>Cтатистика</h3>';
+                stat.forEach(item => {
+                    statInnerHTML += `Код варианта: ${item.value} Голосов: ${item.votes} </br>`
+                })
+                statTableContainer.innerHTML = statInnerHTML;
+             }
+               
+             const getStatistics = async() => {
+                let response = await fetch('http://localhost:3010/stat')
+                buildStatisticTable(await response.json());
+             }
+
+             const sendVote = async() => {
+                 if(currentVoteValue === false) return;
+                 variantsContainer.innerHTML = 'Спасибо, ваш голос принят!';
+                 statTableContainer.innerHTML = 'Подождите, идет обработка статистики';
+                 await fetch('http://localhost:3010/vote', {
+                     method: 'POST',
+                     body: JSON.stringify({value:currentVoteValue}),
+                     headers: {
+                         'Content-type': 'application/json; charset=utf-8'
+                     },
+                 })
+                 getStatistics();
+             }
+             getStatistics();
+                getVariants();
+        </script>
+    </body>         
+ </html>
