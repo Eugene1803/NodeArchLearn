@@ -48,12 +48,12 @@
             }
 
              getVariants = async () => {
-                let response = await fetch('http://localhost:3010/variants')
+                let response = await fetch('http://134.209.249.75:3010/variants')
                 buildVariants(await response.json());
              }
 
              getFormattedStatistics = async (accept) => {
-                let response = await fetch('http://localhost:3010/getFormattedStatistics', {
+                let response = await fetch('http://134.209.249.75:3010/getFormattedStatistics', {
                     method: 'get',
                     headers: {
                         Accept: accept,
@@ -72,7 +72,7 @@
              }
                
              const getStatistics = async() => {
-                let response = await fetch('http://localhost:3010/stat')
+                let response = await fetch('http://134.209.249.75:3010/stat')
                 buildStatisticTable(await response.json());
              }
 
@@ -80,7 +80,7 @@
                  if(currentVoteValue === false) return;
                  variantsContainer.innerHTML = 'Спасибо, ваш голос принят!';
                  statTableContainer.innerHTML = 'Подождите, идет обработка статистики';
-                 await fetch('http://localhost:3010/vote', {
+                 await fetch('http://134.209.249.75:3010/vote', {
                      method: 'POST',
                      body: JSON.stringify({value:currentVoteValue}),
                      headers: {
