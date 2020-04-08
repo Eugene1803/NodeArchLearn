@@ -4,6 +4,7 @@
 # logs
 *.log
 *.pid
+requestBase.json
 
 # misc
 **/build
