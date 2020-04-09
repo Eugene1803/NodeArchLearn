@@ -27,7 +27,7 @@ const port = 5050;
 const requestBaseFN = path.join(__dirname, '/requestBase.json');
 
 // webserver.use() для статики
-/*
+
 webserver.options('/saveRequest', (req, res) => {
     res.setHeader("Access-Control-Allow-Origin","*");
     res.setHeader("Access-Control-Allow-Headers","Content-Type");
@@ -47,7 +47,7 @@ webserver.options('/makeRequest', (req, res) => {
     res.setHeader("Access-Control-Allow-Headers","Content-Type");
 
     res.send(""); // сам ответ на preflight-запрос может быть пустым
-})*/
+})
 
 webserver.use(
     "/index.html",
@@ -100,23 +100,28 @@ webserver.post('/makeRequest', async (req, res) => {
     })
     let requestResult = {};
     let response;
-    if(method === 'POST'){
-        const body = {};
-        reqParams.forEach(({key, value}) => {
-            body[key] = value;
-        })
-        response = await fetch(url, {
-            method,
-            headers: reqHeaders,
-            body,
-        });
+    try {
+        if (method === 'POST') {
+            const body = {};
+            reqParams.forEach(({key, value}) => {
+                body[key] = value;
+            })
+            response = await fetch(url, {
+                method,
+                headers: reqHeaders,
+                body,
+            });
 
-    }
-    else if(method === 'GET'){
-        response = await fetch(`${url}?${getEncodedStrFromArray(reqParams)}`, {
-            method,
-            headers: reqHeaders
-        });
+        } else if (method === 'GET') {
+            response = await fetch(`${url}?${getEncodedStrFromArray(reqParams)}`, {
+                method,
+                headers: reqHeaders
+            });
+        }
+    }catch (e) {
+        console.log(e.message);
+        res.status(500).send(e.message);
+        return;
     }
 
     requestResult.headers = {};

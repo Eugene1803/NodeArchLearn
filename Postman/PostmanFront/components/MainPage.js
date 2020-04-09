@@ -70,7 +70,12 @@ class MainPage extends React.PureComponent {
         "Content-type": "application/json"
       }
     });
-    response = await response.json();``
+    if(response.status === 500) {
+      const errorDescription = await response.text();
+      alert(`Внутренняя ошибка сервера: ${errorDescription}`);
+      return;
+    }
+    response = await response.json();
     this.setState({response});
   }
 
@@ -142,6 +147,7 @@ class MainPage extends React.PureComponent {
     const reqConfig = {
       method, url, headers, reqParams,id
     }
+    console.log(reqConfig);
     let response = await fetch('http://134.209.249.75:5050/saveRequest', {
       method: 'post', 
       body: JSON.stringify(reqConfig),
