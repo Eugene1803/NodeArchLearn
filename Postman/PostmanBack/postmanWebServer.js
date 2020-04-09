@@ -5,16 +5,29 @@ const os = require('os');
 const bodyParser = require('body-parser');
 const fetch = require('node-fetch');
 
+const responseHeaders = [
+    "Access-Control-Allow-Origin",
+    "Content-Length",
+    "Content-Type",
+    "Date",
+    "ETag",
+    "X-Powered-By",
+]
+
+const getEncodedStrFromArray = arr => {
+    return arr.map(({key, value}) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&');
+}
+
 const webserver = express();
 
 webserver.use(express.json()); // мидлварь, умеющая обрабатывать тело запроса в формате JSON
 //webserver.use(bodyParser.text()); // мидлварь, умеющая обрабатывать тело запроса в текстовом формате (есть и bodyParser.json())
 //webserver.use(anyBodyParser);  //
-const port = 8081;
+const port = 5050;
 const requestBaseFN = path.join(__dirname, '/requestBase.json');
 
 // webserver.use() для статики
-
+/*
 webserver.options('/saveRequest', (req, res) => {
     res.setHeader("Access-Control-Allow-Origin","*");
     res.setHeader("Access-Control-Allow-Headers","Content-Type");
@@ -34,8 +47,20 @@ webserver.options('/makeRequest', (req, res) => {
     res.setHeader("Access-Control-Allow-Headers","Content-Type");
 
     res.send(""); // сам ответ на preflight-запрос может быть пустым
-})
+})*/
 
+webserver.use(
+    "/index.html",
+    express.static(path.resolve(__dirname,"../PostmanFront/public/index.html"))
+);
+webserver.use(
+    "/bundle.min.js",
+    express.static(path.resolve(__dirname,"../PostmanFront/public/bundle.min.js"))
+);
+webserver.use(
+    "/main.bundle.css",
+    express.static(path.resolve(__dirname,"../PostmanFront/public/main.bundle.css"))
+);
 
 webserver.get('/requestsList', (req, res) => {
     res.setHeader("Access-Control-Allow-Origin","*");
@@ -47,16 +72,23 @@ webserver.get('/requestsList', (req, res) => {
 webserver.post('/saveRequest', (req, res) => {
     res.setHeader("Access-Control-Allow-Origin","*");
     const requestData = req.body;
-    console.log(requestData);
     fs.openSync(requestBaseFN, 'a+');
     const fileData = fs.readFileSync(requestBaseFN, "utf8");
-    const newBase = fileData ? JSON.parse(fileData) : [];
-    const newReqItem = {...requestData, id: newBase.length + 1};
-    newBase.push(newReqItem);
+    let newBase = fileData ? JSON.parse(fileData) : [];
+    let newReqItem;
+    if(requestData.id !== null) {
+        newBase = newBase.map(item => {
+            return (item.id === requestData.id) && requestData || item;
+        })
+    }
+    else {
+       newReqItem = {...requestData, id: newBase.length + 1};
+        newBase.push(newReqItem);
+    }
     const newBaseJSON = JSON.stringify(newBase);
     fs.writeFileSync(requestBaseFN,newBaseJSON);
     
-    res.send(JSON.stringify(newReqItem));
+    res.send(JSON.stringify(requestData.id !== null ? requestData: newReqItem));
 })
 
 webserver.post('/makeRequest', async (req, res) => {
@@ -67,23 +99,36 @@ webserver.post('/makeRequest', async (req, res) => {
         reqHeaders[item.key] = item.value;
     })
     let requestResult = {};
+    let response;
     if(method === 'POST'){
-        const response = await fetch(url, {
+        const body = {};
+        reqParams.forEach(({key, value}) => {
+            body[key] = value;
+        })
+        response = await fetch(url, {
             method,
             headers: reqHeaders,
-            body: reqParams,
+            body,
         });
-        requestResult.headers = response.headers;
-        requestResult.status = response.status;
-        console.log('response', response);
-        requestResult.body = await response.json();
 
     }
     else if(method === 'GET'){
-        requestResult = 'Пока не обрабатывается GET'
+        response = await fetch(`${url}?${getEncodedStrFromArray(reqParams)}`, {
+            method,
+            headers: reqHeaders
+        });
     }
 
-    res.send(JSON.stringify(requestResult));
+    requestResult.headers = {};
+    responseHeaders.forEach(item => {
+        requestResult.headers[item] = response.headers.get(item);
+    })
+    requestResult.status = response.status;
+    requestResult.body = (requestResult.headers['Content-type'] && requestResult.headers['Content-type'].indexOf('application/json') !== -1) ?
+        await response.json() :
+        await response.text();
+
+    res.send(requestResult);
 })
 
 webserver.listen(port,()=>{

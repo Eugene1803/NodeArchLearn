@@ -1,2 +1,35 @@
 ﻿.MainPage {
+  padding: 20px;
+  .RequestList {
+    max-height: 200px;
+    overflow-y: scroll;
+    .RequestListItem {
+      cursor: pointer;
+      margin: 5px;
+      border-bottom: 1px solid black;
+      &:hover{
+        background-color: lightgray;
+      }
+      >div {
+        margin-right: 10px;
+      }
+
+    }
+  }
+  .ReqParamsSection {
+    margin: 10px 0;
+    background-color: lightgray;
+    padding: 10px;
+
+  }
+  .ParamsInputsList {
+    margin-bottom: 20px;
+    input {
+      width: 30%;
+      margin-right: 10px;
+    }
+  }
+  .SaveButton {
+    margin-right: 5px;
+  }
 }

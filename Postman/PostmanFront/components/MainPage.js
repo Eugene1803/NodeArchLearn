@@ -18,6 +18,7 @@ class MainPage extends React.PureComponent {
     headers: [{key: '', value: ''}],
     requestsList: [],
     response: null,
+    isEditable: true,
   }
 
   async componentDidMount() {
@@ -25,7 +26,7 @@ class MainPage extends React.PureComponent {
   }
 
   getRequestsList = async () => {
-    const response = await fetch('http://localhost:8081/requestsList', {
+    const response = await fetch('http://134.209.249.75:5050/requestsList', {
       method: 'GET'
     });
     const data = await response.json();
@@ -53,6 +54,7 @@ class MainPage extends React.PureComponent {
       reqParams: [{key: '', value: ''}],
       headers: [{key: '', value: ''}],
       response: null,
+      isEditable: true
     })
   }
 
@@ -61,15 +63,14 @@ class MainPage extends React.PureComponent {
     const reqConfig = {
       method, url, headers, reqParams,
     }
-    let response = await fetch('http://localhost:8081/makeRequest', {
+    let response = await fetch('http://134.209.249.75:5050/makeRequest', {
       method: 'post',
       body: JSON.stringify(reqConfig),
       headers: {
         "Content-type": "application/json"
       }
     });
-    response = await response.json();
-    console.log(response);
+    response = await response.json();``
     this.setState({response});
   }
 
@@ -131,15 +132,17 @@ class MainPage extends React.PureComponent {
     this.setState({
       ...item,
       response: null,
+      isEditable: false
     })
   }
 
   saveReqConfig = async () => {
-    const {method, url, headers, reqParams} = this.state;
+    this.setState({isEditable: false});
+    const {method, url, headers, reqParams, id} = this.state;
     const reqConfig = {
-      method, url, headers, reqParams,
+      method, url, headers, reqParams,id
     }
-    let response = await fetch('http://localhost:8081/saveRequest', {
+    let response = await fetch('http://134.209.249.75:5050/saveRequest', {
       method: 'post', 
       body: JSON.stringify(reqConfig),
       headers: {
@@ -149,13 +152,34 @@ class MainPage extends React.PureComponent {
     const data = await response.json();
     this.setState({id: data.id});
     this.getRequestsList();
-  } 
+  }
 
   render() {
-
+    const {response, isEditable} = this.state;
+    const headersJsx = [];
+    if(response && response.headers) {
+    for(let key in response.headers) {
+      headersJsx.push(
+          <div style={{display: 'flex'}} className='RequestListItem'>
+            <div><b>{key}:</b></div>
+            <div>{response.headers[key]}</div>
+          </div>
+      )
+    }}
     return (
       <div className="MainPage">
-        <select onChange={this.changeReqMethod} value={this.state.method} disabled={this.state.id}>
+        <h3>Сохраненные конфигурации запросов</h3>
+        <div className={'RequestList'}>
+          {this.state.requestsList.map(item =>
+              <div style={{display: 'flex'}} className='RequestListItem' onClick={(e) => this.getRequestFromList(e, item)}>
+                <div><b>id:</b> {item.id}</div>
+                <div><b>Метод:</b> {item.method}</div>
+                <div><b>Url:</b> {item.url}</div>
+              </div>
+          )}
+        </div>
+        <div className={'ReqParamsSection'}>
+        <select onChange={this.changeReqMethod} value={this.state.method} disabled={!isEditable}>
           {requestMethodOptions.map(item => (
             <option key={item.value} name={item.name} value={item.value} >
               {item.value}
@@ -164,74 +188,78 @@ class MainPage extends React.PureComponent {
         </select>
 
         <label>URL</label>
-        <input type='text' value={this.state.url} onChange={this.onChangeUrl} disabled={this.state.id}/>
-        <div>
-          <h3>Параметры запроса</h3>
+        <input style={{width: '60%'}} type='text' value={this.state.url} onChange={this.onChangeUrl} disabled={!isEditable}/>
+        </div>
+        <div className={'ReqParamsSection'}>
+          <h3>Параметры</h3>
+          <div className={'ParamsInputsList'}>
         {this.state.reqParams.map((item, i) => (
           <div style={{display: 'flex'}} key={i}>
-            <label>Ключ</label>
-          <input disabled={this.state.id} value={this.state.reqParams[i].key} onChange={(e) => this.onChangeReqParams(e, i, 'key')}/>
-          <label>Значение</label>
-          <input disabled={this.state.id} value={this.state.reqParams[i].value} onChange={(e) => this.onChangeReqParams(e, i, 'value')}/>
-            {!this.state.id &&
-              <button onClick={() => this.deleteReqParamsRow(i)}>Удалить параметр запроса</button>
+          <input placeholder={'Ключ'} disabled={!isEditable} value={this.state.reqParams[i].key} onChange={(e) => this.onChangeReqParams(e, i, 'key')}/>
+          <input placeholder={'Значение'} disabled={!isEditable} value={this.state.reqParams[i].value} onChange={(e) => this.onChangeReqParams(e, i, 'value')}/>
+            {isEditable &&
+              <button onClick={() => this.deleteReqParamsRow(i)}>Х</button>
             }
           </div>
         ))}
-          {!this.state.id &&
+          </div>
+          {isEditable &&
           <button onClick={this.addReqParamsRow}>Добавить параметр запроса</button>
           }
         </div>
-        <div>
-          <h3>Заголовки запроса</h3>
+        <div className={'ReqParamsSection'}>
+          <h3>Заголовки </h3>
+          <div className={'ParamsInputsList'}>
         {this.state.headers.map((item, i) => (
           <div style={{display: 'flex'}} key={i}>
-            <label>Ключ</label>
-          <input disabled={this.state.id} value={this.state.headers[i].key} onChange={(e) => this.onChangeHeaders(e, i, 'key')}/>
-          <label>Значение</label>
-          <input disabled={this.state.id} value={this.state.headers[i].value} onChange={(e) => this.onChangeHeaders(e, i, 'value')}/>
-            {!this.state.id &&
-            <button onClick={() => this.deleteHeadersRow(i)}>Удалить заголовок запроса</button>
+          <input placeholder={'Наименование заголовка'} disabled={!isEditable} value={this.state.headers[i].key} onChange={(e) => this.onChangeHeaders(e, i, 'key')}/>
+
+          <input placeholder={'Значение'} disabled={!isEditable} value={this.state.headers[i].value} onChange={(e) => this.onChangeHeaders(e, i, 'value')}/>
+            {isEditable &&
+            <button onClick={() => this.deleteHeadersRow(i)}>Х</button>
             }
 
           </div>
         ))}
-          {!this.state.id &&
+          </div>
+          {isEditable &&
           <button onClick={this.addHeadersRow}>Добавить заголовок запроса</button>
           }
         </div>
         <div>
-          {!this.state.id &&
-            <button onClick={this.saveReqConfig}>Сохранить запрос</button>
+          {isEditable &&
+            <button className={'SaveButton'} onClick={this.saveReqConfig}>Сохранить запрос</button>
           }
-          {this.state.id &&
-          <button onClick={this.makeNewRequestConfig}>Создать новый запрос</button>
+          <button className={'SaveButton'} onClick={this.makeNewRequestConfig}>Создать новый запрос</button>
+          {!isEditable &&
+            <button onClick={() => this.setState({isEditable: true})}>Изменить данные запроса</button>
           }
-          {this.state.id &&
-          <button onClick={this.sendRequest}>Отправить запрос</button>
+          {!isEditable &&
+          <button className={'SaveButton'} onClick={this.sendRequest}>Отправить запрос</button>
           }
         </div>
+        <h3>Результаты запроса</h3>
+        {!!response &&
         <div>
-          {this.state.requestsList.map(item =>
-          <div style={{display: 'flex'}} onClick={(e) => this.getRequestFromList(e, item)}>
-            <div>{item.id}</div>
-            <div>{item.method}</div>
-            <div>{item.url}</div>
+          <div>
+            <div><b>Статус: </b>{!!response && response.status}</div>
+            <br/>
+            <div>Заголовки ответа</div>
+            <div>
+              <div className={'RequestList'}>
+                {headersJsx}
+              </div>
+            </div>
           </div>
-          )}
-        </div>
-        <div>
-          <h3>Ответ на запрос</h3>
-          <pre style={{width: '60%', height: '300px'}}>
-            {!!this.state.response && JSON.stringify(this.state.response)}
+          <br/>
+          <div>Тело ответа</div>
+          <pre style={{width: '100%', height: '300px', border: '1px solid black'}}>
+            {!!this.state.response && this.state.response.body}
           </pre>
-        </div>
+        </div>}
       </div>
-    )
-    ;
-
+    );
   }
-
 }
 
 export default MainPage;
