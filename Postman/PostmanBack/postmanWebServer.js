@@ -93,7 +93,7 @@ webserver.post('/saveRequest', (req, res) => {
 
 webserver.post('/makeRequest', async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin","*");
-    const {method, url, headers, reqParams}  = req.body;
+    const {method, url, headers, body}  = req.body;
     const reqHeaders = {};
     headers.forEach(item => {
         reqHeaders[item.key] = item.value;
@@ -102,10 +102,6 @@ webserver.post('/makeRequest', async (req, res) => {
     let response;
     try {
         if (method === 'POST') {
-            const body = {};
-            reqParams.forEach(({key, value}) => {
-                body[key] = value;
-            })
             response = await fetch(url, {
                 method,
                 headers: reqHeaders,
@@ -113,13 +109,12 @@ webserver.post('/makeRequest', async (req, res) => {
             });
 
         } else if (method === 'GET') {
-            response = await fetch(`${url}?${getEncodedStrFromArray(reqParams)}`, {
+            response = await fetch(`${url}?${body}`, {
                 method,
                 headers: reqHeaders
             });
         }
     }catch (e) {
-        console.log(e.message);
         res.status(500).send(e.message);
         return;
     }

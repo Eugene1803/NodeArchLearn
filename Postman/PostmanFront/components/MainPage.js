@@ -1,9 +1,11 @@
 ﻿import React, {Fragment} from 'react';
 //import PropTypes from 'prop-types';
-
+import find from 'lodash/find';
 import './MainPage.scss';
-import { requestMethodOptions } from '../constants/constants';
-
+import {requestHeaders, requestMethodOptions} from '../constants/constants';
+const getEncodedStrFromArray = arr => {
+  return arr.map(({key, value}) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&');
+}
 class MainPage extends React.PureComponent {
 
   static propTypes = {
@@ -15,7 +17,7 @@ class MainPage extends React.PureComponent {
     method: 'GET',
     url: '',
     reqParams: [{key: '', value: ''}],
-    headers: [{key: '', value: ''}],
+    headers: [{key: requestHeaders[0], value: ''}],
     requestsList: [],
     response: null,
     isEditable: true,
@@ -52,7 +54,7 @@ class MainPage extends React.PureComponent {
       method: 'GET',
       url: '',
       reqParams: [{key: '', value: ''}],
-      headers: [{key: '', value: ''}],
+      headers: [{key: requestHeaders[0], value: ''}],
       response: null,
       isEditable: true
     })
@@ -63,6 +65,18 @@ class MainPage extends React.PureComponent {
     const reqConfig = {
       method, url, headers, reqParams,
     }
+    let body;
+    if (method === 'POST') {
+      body = {};
+      reqParams.forEach(({key, value}) => {
+        body[key] = value;
+      })
+      body = JSON.stringify(body);
+    }
+    else if(method === 'GET') {
+      body = getEncodedStrFromArray(reqParams);
+    }
+      reqConfig.body = body;
     let response = await fetch('http://134.209.249.75:5050/makeRequest', {
       method: 'post',
       body: JSON.stringify(reqConfig),
@@ -106,6 +120,7 @@ class MainPage extends React.PureComponent {
   }
 
   onChangeHeaders = (e, index, key) => {
+    console.log('e', e);
     let newHeaders = this.state.headers.map((item, i) => {
       if(i === index) {
         return {...item, [key]: e.target.value.trim()}
@@ -119,7 +134,7 @@ class MainPage extends React.PureComponent {
 
   addHeadersRow = () => {
     let newReqHeaders = [...this.state.headers];
-    newReqHeaders.push({key: '', value: ''});
+    newReqHeaders.push({key: requestHeaders.filter(name => !find(this.state.headers, ['key', name]))[0], value: ''});
     this.setState({
       headers: newReqHeaders,
     })
@@ -142,12 +157,20 @@ class MainPage extends React.PureComponent {
   }
 
   saveReqConfig = async () => {
-    this.setState({isEditable: false});
     const {method, url, headers, reqParams, id} = this.state;
+    if(!url.match(/^(https?:\/\/)?([\w\.]+)\.([a-z]{2,6}\.?)(\/[\w\.]*)*\/?/)) {
+      alert('Неверно заполнен URL!!!');
+      return;
+    }
+    else if(reqParams.some(item => !item.key )){
+      alert('Заполните параметры!!!');
+      return;
+    }
+    this.setState({isEditable: false});
+
     const reqConfig = {
       method, url, headers, reqParams,id
     }
-    console.log(reqConfig);
     let response = await fetch('http://134.209.249.75:5050/saveRequest', {
       method: 'post', 
       body: JSON.stringify(reqConfig),
@@ -218,7 +241,18 @@ class MainPage extends React.PureComponent {
           <div className={'ParamsInputsList'}>
         {this.state.headers.map((item, i) => (
           <div style={{display: 'flex'}} key={i}>
-          <input placeholder={'Наименование заголовка'} disabled={!isEditable} value={this.state.headers[i].key} onChange={(e) => this.onChangeHeaders(e, i, 'key')}/>
+          <select
+              style={{width: '200px'}}
+              placeholder={'Наименование заголовка'}
+              disabled={!isEditable}
+              onChange={(e) => this.onChangeHeaders(e, i, 'key')}
+              value={this.state.headers[i].key}
+          >
+            {[this.state.headers[i].key, ...requestHeaders.filter(name => !find(this.state.headers, ['key', name]))].map((name, index) =>
+                <option  key={index} value={name}>{name}</option>
+            )}
+
+          </select>
 
           <input placeholder={'Значение'} disabled={!isEditable} value={this.state.headers[i].value} onChange={(e) => this.onChangeHeaders(e, i, 'value')}/>
             {isEditable &&
