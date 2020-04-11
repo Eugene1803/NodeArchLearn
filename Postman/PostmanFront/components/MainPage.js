@@ -17,6 +17,7 @@ class MainPage extends React.PureComponent {
     method: 'GET',
     url: '',
     reqParams: [{key: '', value: ''}],
+    body: '',
     headers: [{key: requestHeaders[0], value: ''}],
     requestsList: [],
     response: null,
@@ -56,27 +57,17 @@ class MainPage extends React.PureComponent {
       reqParams: [{key: '', value: ''}],
       headers: [{key: requestHeaders[0], value: ''}],
       response: null,
-      isEditable: true
+      isEditable: true,
+      body: '',
     })
   }
 
   sendRequest = async () => {
-    const {method, url, headers, reqParams} = this.state;
+    const {method, url, headers, reqParams, body} = this.state;
     const reqConfig = {
-      method, url, headers, reqParams,
+      method, url, headers, reqParams, body
     }
-    let body;
-    if (method === 'POST') {
-      body = {};
-      reqParams.forEach(({key, value}) => {
-        body[key] = value;
-      })
-      body = JSON.stringify(body);
-    }
-    else if(method === 'GET') {
-      body = getEncodedStrFromArray(reqParams);
-    }
-      reqConfig.body = body;
+
     let response = await fetch('http://134.209.249.75:5050/makeRequest', {
       method: 'post',
       body: JSON.stringify(reqConfig),
@@ -152,12 +143,13 @@ class MainPage extends React.PureComponent {
     this.setState({
       ...item,
       response: null,
-      isEditable: false
+      isEditable: false,
+      body: item.body || '',
     })
   }
 
   saveReqConfig = async () => {
-    const {method, url, headers, reqParams, id} = this.state;
+    const {method, url, headers, reqParams, id, body} = this.state;
     if(!url.match(/^(https?:\/\/)?([\w\.]+)\.([a-z]{2,6}\.?)(\/[\w\.]*)*\/?/)) {
       alert('Неверно заполнен URL!!!');
       return;
@@ -169,7 +161,7 @@ class MainPage extends React.PureComponent {
     this.setState({isEditable: false});
 
     const reqConfig = {
-      method, url, headers, reqParams,id
+      method, url, headers, reqParams,id, body
     }
     let response = await fetch('http://134.209.249.75:5050/saveRequest', {
       method: 'post', 
@@ -181,6 +173,10 @@ class MainPage extends React.PureComponent {
     const data = await response.json();
     this.setState({id: data.id});
     this.getRequestsList();
+  }
+
+  onChangeBody = e => {
+    this.setState({body: e.target.value});
   }
 
   render() {
@@ -235,6 +231,13 @@ class MainPage extends React.PureComponent {
           {isEditable &&
           <button onClick={this.addReqParamsRow}>Добавить параметр запроса</button>
           }
+        </div>
+        <div className={'ReqParamsSection'}>
+          <h3>Тело запроса</h3>
+          <textarea onChange={this.onChangeBody} style={{width: '80%', minHeight: '200px'}} value={this.state.body}
+          disabled={!isEditable}>
+
+          </textarea>
         </div>
         <div className={'ReqParamsSection'}>
           <h3>Заголовки </h3>
