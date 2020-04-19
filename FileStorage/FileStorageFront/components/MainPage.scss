@@ -1,0 +1,32 @@
+﻿.MainPage {
+  > div {
+    margin: auto;
+  }
+  .Form {
+    width: 90%;
+    > div {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 10px;
+      textarea {
+        width: 60%;
+        height: 150px;
+      }
+    }
+  }
+  .List {
+
+    height: 400px;
+    overflow-y: scroll;
+    padding: 20px;
+    background-color: lightgray;
+    .ListItem {
+      padding: 10px 0;
+      border-bottom: 1px solid black;
+      > div {
+        margin-bottom: 10px;
+      }
+
+    }
+  }
+}
