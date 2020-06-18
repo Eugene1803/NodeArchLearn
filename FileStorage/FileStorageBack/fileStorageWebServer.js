@@ -123,10 +123,10 @@ where id='${queryResult[0].id}';`,
                 res.setHeader("Content-type","application/json");
                 const queryResult = await selectQueryFactory(
                     connection,
-                    `select id, login, password from users where login='${login}' and password='${hashedPassword}'`,
+                    `select id, login, password, active from users where login='${login}' and password='${hashedPassword}'`,
                     []);
                 if(queryResult && queryResult.length === 1){
-                    console.log('queryResult', queryResult);
+
                     if(+queryResult[0].active){
                         req.session.isAuthorized = true;
                         req.session.login = login;
