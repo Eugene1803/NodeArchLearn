@@ -2,6 +2,7 @@ import React from 'react';
 import './Registration.scss';
 import NavLink from "react-router-dom/NavLink";
 import {isObject} from "lodash";
+import {webServerUrl} from "../constants/constants";
 
 class Registration extends React.PureComponent {
 
@@ -95,7 +96,7 @@ class Registration extends React.PureComponent {
     register = async () => {
         this.setState({processed: true})
         try {
-            const response = await fetch('http://134.209.249.75:5055/registration', {
+            const response = await fetch(`${webServerUrl}/registration`, {
                 method: 'post',
                 body: JSON.stringify({
                     login: this.state.login.value,

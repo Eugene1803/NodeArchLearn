@@ -1,13 +1,22 @@
 const express = require('express');
+const nodemailer = require('nodemailer');
+var session = require('express-session');
 const fs = require('fs');
 const path = require('path');
+const mysql = require('mysql');
 const Busboy = require('busboy');
 const inspect = require('util').inspect;
-const {find}  = require('lodash');
+const {find, includes}  = require('lodash');
 const WebSocket = require('ws');
+const {sha256} = require('js-sha256');
+const { newConnectionFactory, selectQueryFactory,modifyQueryFactory} = require("./db_utils");
+const {nodemailerTransporterConfig, dbFileStoragePoolConfig} = require('./secretConfigs.js');
 
-const port  = 5055;
-const wsPort = 5056;
+let pool = mysql.createPool(dbFileStoragePoolConfig);
+
+let transporter = nodemailer.createTransport(nodemailerTransporterConfig);
+
+const {webServerPort: port, webSocketPort: wsPort}  = require('./../common.js');
 const clients = [];
 const server = new WebSocket.Server({ port: wsPort });
 server.on('connection', connection => {
@@ -23,25 +32,131 @@ webserver.use(express.urlencoded({extended: true}));
 
 webserver.use(express.json());
 
-webserver.options('/getFilesBase', (req, res) => {
-    res.setHeader("Access-Control-Allow-Origin","*");
+webserver.options('/*', (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin","http://localhost:4096");
     res.setHeader("Access-Control-Allow-Headers","Content-Type");
-
-    res.send(""); // сам ответ на preflight-запрос может быть пустым
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.send("");
 })
 
-webserver.options('/getFile', (req, res) => {
-    res.setHeader("Access-Control-Allow-Origin","*");
+webserver.use(session({
+    secret: 'ANY_SECRET_TEXT',
+    resave: false,
+    saveUninitialized: true
+}));
+
+webserver.use(function (req, res, next) {
+    const url = req.originalUrl;
+
+    res.setHeader("Access-Control-Allow-Origin","http://localhost:4096");
     res.setHeader("Access-Control-Allow-Headers","Content-Type");
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-    res.send(""); // сам ответ на preflight-запрос может быть пустым
-})
+    (async () => {
 
-webserver.options('/sendFile', (req, res) => {
-    res.setHeader("Access-Control-Allow-Origin","*");
-    res.setHeader("Access-Control-Allow-Headers","Content-Type");
+        res.setHeader("Content-type","application/json");
+        const {login, password, eMail} = req.body;
+        const hashedPassword = password && sha256(password);
+        const verificationKey = String(Math.random());
+        const errors = [];
+        const answer = {};
+        let queryResult;
+        const connection = await newConnectionFactory(pool,res);
 
-    res.send(""); // сам ответ на preflight-запрос может быть пустым
+        try {
+            if (url === '/registration') {
+                 queryResult = await selectQueryFactory(
+                    connection,
+                    `select id, login from users where login='${login}'`,
+                    []);
+
+                if(queryResult && queryResult.length){
+                    errors.push('Данный логин используется другим пользователем');
+                }
+                else {
+                    const {insertId} = await modifyQueryFactory(
+                        connection,
+                        ` insert into users(login,password, eMail, verificationKey) 
+                        values ('${login}', '${hashedPassword}','${eMail}', '${verificationKey}')`,
+                        []);
+                    if(insertId) {
+                        const link = `http://134.209.249.75:${port}/verification?login=${encodeURIComponent(login)}&verificationKey=${verificationKey}`
+                        const {messageId} = await transporter.sendMail({
+                            from: '"FileStorage" <shmygatest@gmail.com>',
+                            to: eMail,
+                            subject: "Подтверждение регистрации",
+                            text: "Привет!!",
+                            html: `Привет! Перейди по ,<a href=${link} target="_blank">ссылочке</a> чтобы подтвердить регистрацию`
+                        })
+                        if(messageId) {
+                            answer.id = insertId;
+                        }
+                    else {
+                        errors.push('Ошибка отправки письма на ваш e-mail');
+                        }
+                    }
+                }
+                res.send(JSON.stringify(answer))
+            } else if (includes(url, '/verification')) {
+
+                const {login, verificationKey} = req.query;
+                queryResult = await selectQueryFactory(
+                    connection,
+                    `select id, login, verificationKey from users 
+                    where login='${login}' and verificationKey='${verificationKey}'`,
+                    []);
+                if(queryResult && queryResult.length === 1){
+                    const {affectedRows} = await modifyQueryFactory(
+                        connection,
+                        `update users
+set active=1
+where id='${queryResult[0].id}';`,
+                        []);
+                    if(affectedRows) {
+                        next();
+                        return;
+                    }
+                }
+
+                res.send('Ошибка верификации вашего аккаунта');
+            } else if (url === '/authorization') {
+                const queryResult = await selectQueryFactory(
+                    connection,
+                    `select id, login, password from users where login='${login}' and password='${hashedPassword}'`,
+                    []);
+                if(queryResult && queryResult.length === 1){
+                    req.session.isAuthorized = true;
+                    req.session.login = login;
+                    answer.isAuthorized = true;
+                }
+                else {
+                    errors.push('Ошибка авторизации');
+                }
+
+                res.send(JSON.stringify(answer));
+            }
+            else if (url === '/checkAuthorization') {
+                res.send(JSON.stringify({
+                    isAuthorized: !!req.session.isAuthorized,
+                    login: req.session.login,
+                }))
+
+            }
+        }
+        catch(e) {
+            console.log('ошибка', e);
+        }
+        finally {
+            if ( connection ) {
+                connection.release();
+            }
+        next();
+        }
+        })()
+});
+
+webserver.get('/verification', (req, res) => {
+     res.redirect(302,`http://134.209.249.75:${port}/index.html`);
 });
 
 webserver.use(
@@ -58,7 +173,6 @@ webserver.use(
 );
 
 webserver.post('/sendFile', (req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin","*");
    const clientId  = +req.query.id;
    const clientConnection = find(clients, {id:clientId}).connection;
    const contentLength = req.headers['content-length'];
@@ -113,7 +227,7 @@ webserver.post('/sendFile', (req, res, next) => {
 })
 
 webserver.post('/getFile', (req, res) => {
-    res.setHeader("Access-Control-Allow-Origin","*");
+
     const body  = req.body;
     try {
         fs.open(path.join(__dirname, '/filesInfoDataBase.json'), 'a+', (err, fd) => {
@@ -140,7 +254,7 @@ webserver.post('/getFile', (req, res) => {
 })
 
 webserver.get('/getFilesBase', (req, res) => {
-    res.setHeader("Access-Control-Allow-Origin","*");
+
     try {
         fs.open(path.join(__dirname, '/filesInfoDataBase.json'), 'a+', (err, fd) => {
             if(err) throw new Error('');

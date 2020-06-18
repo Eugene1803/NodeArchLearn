@@ -5,6 +5,7 @@ import Registration from "./Registration";
 import Authorization from "./Authorization";
 import MainPage from "./MainPage";
 import {Route} from "react-router-dom";
+import {webServerUrl} from "../constants/constants";
 
 class IndexPage extends React.PureComponent {
 
@@ -14,7 +15,8 @@ class IndexPage extends React.PureComponent {
     }
 
     async componentDidMount() {
-        const response = await fetch('http://134.209.249.75:5055/checkAuthorization', {
+        console.log('загрузка глваной страницы');
+        const response = await fetch(`${webServerUrl}/checkAuthorization`, {
             method: 'post',
             credentials: 'include',
         });

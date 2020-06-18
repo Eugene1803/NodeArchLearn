@@ -4,6 +4,7 @@ import NavLink from "react-router-dom/NavLink";
 import {isObject} from 'lodash';
 
 import {withRouter} from "react-router";
+import {webServerUrl} from "../constants/constants";
 
 class Authorization extends React.PureComponent {
 
@@ -59,7 +60,7 @@ class Authorization extends React.PureComponent {
     authorize = async () => {
         this.setState({processed: true})
         try {
-            const response = await fetch('http://134.209.249.75:5055/authorization', {
+            const response = await fetch(`${webServerUrl}/authorization`, {
                 method: 'post',
                 body: JSON.stringify({
                     login: this.state.login.value,
@@ -72,7 +73,6 @@ class Authorization extends React.PureComponent {
             });
             const {isAuthorized, errors} = await response.json();
             if(isAuthorized) {
-                this.props.cbAuthorized && this.props.cbAuthorized();
                 this.props.history.push('/main');
                 document.title = this.state.login.value;
             }

@@ -2,7 +2,7 @@
 //import PropTypes from 'prop-types';
 import find from 'lodash/find';
 import './MainPage.scss';
-import {requestHeaders, requestMethodOptions} from '../constants/constants';
+import {requestHeaders, requestMethodOptions, webServerUrl, webSocketUrl} from '../constants/constants';
 const getEncodedStrFromArray = arr => {
   return arr.map(({key, value}) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&');
 }
@@ -28,7 +28,7 @@ class MainPage extends React.PureComponent {
     }
 
     createWsConnection = async () => {
-        const  socket = new WebSocket("ws://134.209.249.75:5056");
+        const  socket = new WebSocket(webSocketUrl);
         socket.onopen = () => {
             console.log('Соединение с ws установлено!');
             this.setState({
@@ -58,7 +58,7 @@ class MainPage extends React.PureComponent {
                 }
 
                 try {
-                    const response = await fetch('http://134.209.249.75:5055/getFilesBase', {
+                    const response = await fetch(`${webServerUrl}/getFilesBase`, {
                         method: 'get'
                     });
                     const fileBase = await response.json();
@@ -102,7 +102,7 @@ class MainPage extends React.PureComponent {
         formData.append('file', this.state.file);
         formData.append('comment', this.state.comment);
         try {
-            const response = await fetch(`http://134.209.249.75:5055/sendFile?id=${this.state.wsId}`, {
+            const response = await fetch(`${webServerUrl}/sendFile?id=${this.state.wsId}`, {
                 method: 'post',
                 body: formData,
             });
@@ -122,7 +122,7 @@ class MainPage extends React.PureComponent {
 
     downloadFile = async (name, originName) => {
         try {
-            const response = await fetch('http://134.209.249.75:5055/getFile', {
+            const response = await fetch(`${webServerUrl}/getFile`, {
                 method: 'post',
                 headers: {
                     ['Content-Type']: 'application/json; charset=utf-8',

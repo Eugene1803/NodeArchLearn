@@ -18,3 +18,11 @@ export const requestHeaders = [
     "Sec-Fetch-Site",
     "User-Agent",
 ]
+
+export const localhost = 'localhost';
+export const remoteHost = '134.209.249.75';
+
+const {webServerPort, webSocketPort} = require('./../../common.js');
+
+export const webServerUrl = `http://${remoteHost}:${webServerPort}`;
+export const webSocketUrl = `ws://${remoteHost}:${webSocketPort}`;

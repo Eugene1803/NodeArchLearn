@@ -1,6 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import MainPage from './components/MainPage';
+import {BrowserRouter} from "react-router-dom";
+import IndexPage from "./components/IndexPage";
 
-ReactDOM.render(<MainPage/>, document.getElementById('container'));
+ReactDOM.render(
+    <BrowserRouter>
+        <IndexPage/>
+    </BrowserRouter>,
+    document.getElementById('container'
+    ));
