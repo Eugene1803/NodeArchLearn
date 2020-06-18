@@ -272,7 +272,7 @@ webserver.use(
 );
 
 webserver.use(
-    "/*",
+    "/index.html",
     express.static(path.resolve(__dirname,"../FileStorageFront/public/index.html"))
 );
 

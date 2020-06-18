@@ -22,10 +22,10 @@ class IndexPage extends React.PureComponent {
         });
         const {isAuthorized, login} = await response.json();
         if(!isAuthorized) {
-            this.props.history.push('/authorization');
+            this.props.history.push('index.html/authorization');
         }
         else {
-            this.props.history.push('/main');
+            this.props.history.push('/index.html/main');
             if(login) {
                 document.title = login;
             }
@@ -34,9 +34,9 @@ class IndexPage extends React.PureComponent {
 
     render() {
         return(<Fragment>
-                    <Route exact path={'/registration'} component={Registration}/>
-                    <Route exact path={'/authorization'} component={Authorization}/>
-                    <Route exact path={'/main'} component={MainPage}/>
+                    <Route exact path={'/index.html/registration'} component={Registration}/>
+                    <Route exact path={'/index.html/authorization'} component={Authorization}/>
+                    <Route exact path={'/index.html/main'} component={MainPage}/>
             </Fragment>
 
         )
