@@ -11,3 +11,4 @@ requestBase.json
 **/.DS_Store
 /.idea
 **/files
+secretConfigs.js
