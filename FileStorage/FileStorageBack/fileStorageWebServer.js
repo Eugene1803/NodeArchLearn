@@ -126,6 +126,7 @@ where id='${queryResult[0].id}';`,
                     `select id, login, password from users where login='${login}' and password='${hashedPassword}'`,
                     []);
                 if(queryResult && queryResult.length === 1){
+                    console.log('queryResult', queryResult);
                     if(+queryResult[0].active){
                         req.session.isAuthorized = true;
                         req.session.login = login;
