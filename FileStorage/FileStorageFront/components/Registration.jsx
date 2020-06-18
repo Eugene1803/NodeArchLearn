@@ -159,7 +159,7 @@ class Registration extends React.PureComponent {
                     <span style={{color: 'red'}}>{this.state.eMail.error}</span>
 
                 </div>
-                <div><NavLink to={'/authorization'}>Перейти на страницу авторизации</NavLink></div>
+                <div><NavLink to={'index.html/authorization'}>Перейти на страницу авторизации</NavLink></div>
                 <div><button disabled={!formIsValid || this.state.processed} onClick={this.register}>Зарегистрироваться</button></div>
             </div>
         )

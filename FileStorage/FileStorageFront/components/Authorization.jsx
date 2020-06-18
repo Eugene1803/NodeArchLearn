@@ -110,7 +110,7 @@ class Authorization extends React.PureComponent {
                     <span style={{color: 'red'}}>{this.state.password.error}</span>
 
                 </div>
-                <div><NavLink to={'/registration'}>Перейти на страницу регистрации</NavLink></div>
+                <div><NavLink to={'index.html/registration'}>Перейти на страницу регистрации</NavLink></div>
                 <div><button disabled={!formIsValid || this.state.processed} onClick={this.authorize}>Авторизоваться</button></div>
             </div>
         )
