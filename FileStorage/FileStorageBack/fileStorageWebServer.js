@@ -148,7 +148,9 @@ webserver.get('/getFilesBase', (req, res) => {
                 if(err) throw new Error('');
                 res.setHeader('Content-type', 'application/json');
                 res.send(data || JSON.stringify([]));
-                fs.close(fd);
+                 fs.close(fd, (err, res) => {
+                     if(err) console.log('ошибка', err);
+                 });
             })
         })
     }catch (err) {
