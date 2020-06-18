@@ -45,6 +45,19 @@ webserver.use(session({
     saveUninitialized: true
 }));
 
+webserver.use(
+    "/index.html",
+    express.static(path.resolve(__dirname,"../FileStorageFront/public/index.html"))
+);
+webserver.use(
+    "/bundle.min.js",
+    express.static(path.resolve(__dirname,"../FileStorageFront/public/bundle.min.js"))
+);
+webserver.use(
+    "/main.bundle.css",
+    express.static(path.resolve(__dirname,"../FileStorageFront/public/main.bundle.css"))
+);
+
 webserver.use(function (req, res, next) {
     const url = req.originalUrl;
 
@@ -160,18 +173,7 @@ webserver.get('/verification', (req, res) => {
      res.redirect(302,`http://134.209.249.75:${port}/index.html`);
 });
 
-webserver.use(
-    "/index.html",
-    express.static(path.resolve(__dirname,"../FileStorageFront/public/index.html"))
-);
-webserver.use(
-    "/bundle.min.js",
-    express.static(path.resolve(__dirname,"../FileStorageFront/public/bundle.min.js"))
-);
-webserver.use(
-    "/main.bundle.css",
-    express.static(path.resolve(__dirname,"../FileStorageFront/public/main.bundle.css"))
-);
+
 
 webserver.post('/sendFile', (req, res, next) => {
    const clientId  = +req.query.id;
