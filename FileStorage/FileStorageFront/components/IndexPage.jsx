@@ -34,9 +34,9 @@ class IndexPage extends React.PureComponent {
 
     render() {
         return(<Fragment>
-                    <Route exact path={'/index.html/registration'} component={Registration}/>
-                    <Route exact path={'/index.html/authorization'} component={Authorization}/>
-                    <Route exact path={'/index.html/main'} component={MainPage}/>
+                    <Route exact path={'/registration'} component={Registration}/>
+                    <Route exact path={'/authorization'} component={Authorization}/>
+                    <Route exact path={'/main'} component={MainPage}/>
             </Fragment>
 
         )

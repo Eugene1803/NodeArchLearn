@@ -45,19 +45,6 @@ webserver.use(session({
     saveUninitialized: true
 }));
 
-webserver.use(
-    "/index.html",
-    express.static(path.resolve(__dirname,"../FileStorageFront/public/index.html"))
-);
-webserver.use(
-    "/bundle.min.js",
-    express.static(path.resolve(__dirname,"../FileStorageFront/public/bundle.min.js"))
-);
-webserver.use(
-    "/main.bundle.css",
-    express.static(path.resolve(__dirname,"../FileStorageFront/public/main.bundle.css"))
-);
-
 webserver.use(function (req, res, next) {
     const url = req.originalUrl;
 
@@ -274,6 +261,20 @@ webserver.get('/getFilesBase', (req, res) => {
         res.status(500).send('Oops');
     }
 } )
+
+webserver.use(
+    "/bundle.min.js",
+    express.static(path.resolve(__dirname,"../FileStorageFront/public/bundle.min.js"))
+);
+webserver.use(
+    "/main.bundle.css",
+    express.static(path.resolve(__dirname,"../FileStorageFront/public/main.bundle.css"))
+);
+
+webserver.use(
+    "/*",
+    express.static(path.resolve(__dirname,"../FileStorageFront/public/index.html"))
+);
 
 webserver.listen(port,()=>{
     console.log("web server running on port "+port);
