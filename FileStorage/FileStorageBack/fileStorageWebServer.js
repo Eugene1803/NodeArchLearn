@@ -45,7 +45,7 @@ webserver.options('/sendFile', (req, res) => {
 });
 
 webserver.use(
-    "/",
+    "/index.html",
     express.static(path.resolve(__dirname,"../FileStorageFront/public/index.html"))
 );
 webserver.use(
