@@ -96,6 +96,7 @@ webserver.use(function (req, res, next) {
                         }
                     }
                 }
+                answer.errors = errors;
                 res.send(JSON.stringify(answer))
             } else if (includes(url, '/verification')) {
                 const {login, verificationKey} = req.query;
@@ -131,8 +132,9 @@ where id='${queryResult[0].id}';`,
                 }
                 else {
                     errors.push('Ошибка авторизации');
-                }
 
+                }
+                answer.errors = errors;
                 res.send(JSON.stringify(answer));
             }
             else if (url === '/checkAuthorization') {
