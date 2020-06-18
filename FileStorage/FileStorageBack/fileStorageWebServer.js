@@ -270,6 +270,10 @@ webserver.use(
     "/main.bundle.css",
     express.static(path.resolve(__dirname,"../FileStorageFront/public/main.bundle.css"))
 );
+webserver.use(
+    "/index.html/*",
+    express.static(path.resolve(__dirname,"../FileStorageFront/public/index.html"))
+);
 
 webserver.use(
     "/index.html",
