@@ -54,7 +54,6 @@ webserver.use(function (req, res, next) {
 
     (async () => {
 
-        res.setHeader("Content-type","application/json");
         const {login, password, eMail} = req.body;
         const hashedPassword = password && sha256(password);
         const verificationKey = String(Math.random());
@@ -65,6 +64,7 @@ webserver.use(function (req, res, next) {
 
         try {
             if (url === '/registration') {
+                res.setHeader("Content-type","application/json");
                  queryResult = await selectQueryFactory(
                     connection,
                     `select id, login from users where login='${login}'`,
@@ -98,7 +98,6 @@ webserver.use(function (req, res, next) {
                 }
                 res.send(JSON.stringify(answer))
             } else if (includes(url, '/verification')) {
-
                 const {login, verificationKey} = req.query;
                 queryResult = await selectQueryFactory(
                     connection,
@@ -120,6 +119,7 @@ where id='${queryResult[0].id}';`,
 
                 res.send('Ошибка верификации вашего аккаунта');
             } else if (url === '/authorization') {
+                res.setHeader("Content-type","application/json");
                 const queryResult = await selectQueryFactory(
                     connection,
                     `select id, login, password from users where login='${login}' and password='${hashedPassword}'`,
@@ -136,6 +136,7 @@ where id='${queryResult[0].id}';`,
                 res.send(JSON.stringify(answer));
             }
             else if (url === '/checkAuthorization') {
+                res.setHeader("Content-type","application/json");
                 res.send(JSON.stringify({
                     isAuthorized: !!req.session.isAuthorized,
                     login: req.session.login,
