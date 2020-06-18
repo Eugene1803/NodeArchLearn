@@ -111,7 +111,7 @@ class Registration extends React.PureComponent {
             const {errors, id} = await response.json();
             if(id) {
                 alert('На вашу почту выслано письмо для подтверждения регистрации');
-                this.props.history.push('/authorization');
+                this.props.history.push('/index.html/authorization');
             }
             else if(errors.length) {
                 alert(errors.join('  /  '));
@@ -159,7 +159,7 @@ class Registration extends React.PureComponent {
                     <span style={{color: 'red'}}>{this.state.eMail.error}</span>
 
                 </div>
-                <div><NavLink to={'index.html/authorization'}>Перейти на страницу авторизации</NavLink></div>
+                <div><NavLink to={'/index.html/authorization'}>Перейти на страницу авторизации</NavLink></div>
                 <div><button disabled={!formIsValid || this.state.processed} onClick={this.register}>Зарегистрироваться</button></div>
             </div>
         )

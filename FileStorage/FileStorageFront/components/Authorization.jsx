@@ -73,7 +73,7 @@ class Authorization extends React.PureComponent {
             });
             const {isAuthorized, errors} = await response.json();
             if(isAuthorized) {
-                this.props.history.push('/main');
+                this.props.history.push('/index.html/main');
                 document.title = this.state.login.value;
             }
             else if(errors.length) {
@@ -110,7 +110,7 @@ class Authorization extends React.PureComponent {
                     <span style={{color: 'red'}}>{this.state.password.error}</span>
 
                 </div>
-                <div><NavLink to={'index.html/registration'}>Перейти на страницу регистрации</NavLink></div>
+                <div><NavLink to={'/index.html/registration'}>Перейти на страницу регистрации</NavLink></div>
                 <div><button disabled={!formIsValid || this.state.processed} onClick={this.authorize}>Авторизоваться</button></div>
             </div>
         )

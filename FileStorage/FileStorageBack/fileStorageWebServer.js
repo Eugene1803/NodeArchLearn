@@ -126,9 +126,15 @@ where id='${queryResult[0].id}';`,
                     `select id, login, password from users where login='${login}' and password='${hashedPassword}'`,
                     []);
                 if(queryResult && queryResult.length === 1){
-                    req.session.isAuthorized = true;
-                    req.session.login = login;
-                    answer.isAuthorized = true;
+                    if(+queryResult[0].active){
+                        req.session.isAuthorized = true;
+                        req.session.login = login;
+                        answer.isAuthorized = true;
+                    }
+                    else {
+                        errors.push('Вы не прошли подтверждение регистрации, проверьте почту');
+                    }
+
                 }
                 else {
                     errors.push('Ошибка авторизации');
